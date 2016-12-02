@@ -11,16 +11,16 @@ The app follows standard material design guidlines which makes it aesthetic and 
 Screens
 =======
 
-[![home screen](https://github.com/sjsingh200893/Sunshine/blob/master/art/Screenshot_20161102-222433.png)]
+[![home screen](https://github.com/sjsingh200893/Sunshine/blob/master/app/art/Screenshot_20161202-183728.png)]
 
 
-[![details screen](https://github.com/sjsingh200893/Sunshine/blob/master/art/Screenshot_20161102-222442.png)]
+[![details screen](https://github.com/sjsingh200893/Sunshine/blob/master/app/art/Screenshot_20161202-183738.png)]
 
 
-[![share screen](https://github.com/sjsingh200893/Sunshine/blob/master/art/Screenshot_20161102-222448.png)]
+[![share screen](https://github.com/sjsingh200893/Sunshine/blob/master/app/art/Screenshot_20161202-183749.png)]
 
 
-[![settings screen](https://github.com/sjsingh200893/Sunshine/blob/master/art/Screenshot_20161102-222456.png)]
+[![settings screen](https://github.com/sjsingh200893/Sunshine/blob/master/app/art/Screenshot_20161202-183800.png)]
 
 
-[![home screen tablet](https://github.com/sjsingh200893/Sunshine/blob/master/art/Screenshot_20161102-222901.png)]
+![home screen tablet](https://github.com/sjsingh200893/Sunshine/blob/master/app/art/Screenshot_20161202-185410.png)
