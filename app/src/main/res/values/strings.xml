@@ -10,6 +10,7 @@
 
     <string name="pref_location_key">location</string>
     <string name="pref_location_label">Location</string>
+    <string name="pref_location_key_status">loc-status</string>
     <string name="pref_location_default">94043</string>
 
     <string name="pref_units_label">Temperature Units</string>
@@ -62,5 +63,10 @@
     <string name="pref_enable_notifications_true">Enabled</string>
     <string name="pref_enable_notifications_false">Not Enabled</string>
     <string name="pref_enable_notifications_default" translatable="false">true</string>
+    
+    <string name="empty_forecast_list">No Weather Information Available</string>
+    <string name="empty_forecast_list_no_network">No Weather Information Available. The network is not available to fetch weather data.</string>
 
+    <string name="empty_forecast_list_server_down">No weather information available. The server is not returning data.</string>
+    <string name="empty_forecast_list_server_error">No weather information available. The server is not returning valid data. Please check for an updated version of Sunshine.</string>
 </resources>
