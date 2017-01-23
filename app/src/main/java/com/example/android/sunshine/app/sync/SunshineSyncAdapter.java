@@ -2,6 +2,7 @@ package com.example.android.sunshine.app.sync;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
@@ -26,8 +27,10 @@ import android.support.annotation.IntDef;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.text.format.Time;
+import android.text.style.IconMarginSpan;
 import android.util.Log;
 
+import com.bumptech.glide.Glide;
 import com.example.android.sunshine.app.BuildConfig;
 import com.example.android.sunshine.app.MainActivity;
 import com.example.android.sunshine.app.R;
@@ -47,6 +50,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Vector;
+import java.util.concurrent.ExecutionException;
 
 public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = SunshineSyncAdapter.class.getSimpleName();
@@ -374,11 +378,33 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                     double high = cursor.getDouble(INDEX_MAX_TEMP);
                     double low = cursor.getDouble(INDEX_MIN_TEMP);
                     String desc = cursor.getString(INDEX_SHORT_DESC);
+                   try {
+                       int iconId = Utility.getIconResourceForWeatherCondition(weatherId);
+                       Resources resources = context.getResources();
 
-                    int iconId = Utility.getIconResourceForWeatherCondition(weatherId);
-                    Resources resources = context.getResources();
-                    Bitmap largeIcon = BitmapFactory.decodeResource(resources,
-                            Utility.getArtResourceForWeatherCondition(weatherId));
+                       @SuppressLint("InlinedApi")
+                       int largeIconWidth = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
+                               ? resources.getDimensionPixelSize(android.R.dimen.notification_large_icon_width)
+                               : resources.getDimensionPixelSize(R.dimen.notification_large_icon_default);
+                       @SuppressLint("InlinedApi")
+                       int largeIconHeight = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
+                               ? resources.getDimensionPixelSize(android.R.dimen.notification_large_icon_height)
+                               : resources.getDimensionPixelSize(R.dimen.notification_large_icon_default);
+
+
+
+                       Bitmap largeIcon;
+                       try {
+                           largeIcon = Glide.with(context)
+                                   .load(artUrl)
+                                   .asBitmap()
+                                   .error(artResourceId)
+                                   .fitCenter()
+                                   .into(largeIconWidth, largeIconHeight).get();
+                       } catch (InterruptedException | ExecutionException e) {
+                           Log.e(LOG_TAG, "Error retrieving large icon from " + artUrl, e);
+                           largeIcon = BitmapFactory.decodeResource(resources, artResourceId);
+                       }
                     String title = context.getString(R.string.app_name);
 
                     // Define the text of the forecast.
