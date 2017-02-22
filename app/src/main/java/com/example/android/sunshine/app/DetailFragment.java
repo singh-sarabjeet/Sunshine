@@ -9,21 +9,19 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.example.android.sunshine.app.DetailActivity;
-import com.example.android.sunshine.app.R;
-import com.example.android.sunshine.app.Utility;
 import com.example.android.sunshine.app.data.WeatherContract;
 
 public class DetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -112,11 +110,11 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         // Retrieve the share menu item
         MenuItem menuItem = menu.findItem(R.id.action_share);
         menuItem.setIntent(createShareForecastIntent());
-            }
+    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        if ( getActivity() instanceof DetailActivity ){
+        if (getActivity() instanceof DetailActivity) {
             // Inflate the menu; this adds items to the action bar if it is present.
             inflater.inflate(R.menu.detailfragment, menu);
             finishCreatingMenu(menu);
@@ -137,7 +135,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         super.onActivityCreated(savedInstanceState);
     }
 
-    void onLocationChanged( String newLocation ) {
+    void onLocationChanged(String newLocation) {
         // replace the uri, since the location has changed
         Uri uri = mUri;
         if (null != uri) {
@@ -146,13 +144,16 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             mUri = updatedUri;
             getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
         }
-        getView().setVisibility(View.INVISIBLE);
+        ViewParent vp = getView().getParent();
+        if (vp instanceof CardView) {
+            ((View) vp).setVisibility(View.INVISIBLE);
+        }
     }
 
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        if ( null != mUri ) {
+        if (null != mUri) {
             // Now create and return a CursorLoader that will take care of
             // creating a Cursor for the data being displayed.
             return new CursorLoader(
@@ -170,22 +171,25 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (data != null && data.moveToFirst()) {
-            getView().setVisibility(View.VISIBLE);
+            ViewParent vp = getView().getParent();
+            if (vp instanceof CardView) {
+                ((View) vp).setVisibility(View.VISIBLE);
+            }
             // Read weather condition ID from cursor
             int weatherId = data.getInt(COL_WEATHER_CONDITION_ID);
 
 
-                // Use weather art image
-                Glide.with(this)
-                        .load(Utility.getArtUrlForWeatherCondition(getActivity(), weatherId))
-                        .error(Utility.getArtResourceForWeatherCondition(weatherId))
-                        .crossFade()
-                        .into(mIconView);
+            // Use weather art image
+            Glide.with(this)
+                    .load(Utility.getArtUrlForWeatherCondition(getActivity(), weatherId))
+                    .error(Utility.getArtResourceForWeatherCondition(weatherId))
+                    .crossFade()
+                    .into(mIconView);
 
 
             // Read date from cursor and update views for day of week and date
             long date = data.getLong(COL_WEATHER_DATE);
-            String dateText = Utility.getFriendlyDayString(getActivity(),date);
+            String dateText = Utility.getFriendlyDayString(getActivity(), date);
             mDateView.setText(dateText);
 
             // Get description from weather condition ID
@@ -239,23 +243,23 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             // If onCreateOptionsMenu has already happened, we need to update the share intent now.
 
         }
-        AppCompatActivity activity = (AppCompatActivity)getActivity();
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
         Toolbar toolbarView = (Toolbar) getView().findViewById(R.id.toolbar);
 
         // We need to start the enter transition after the data has loaded
         if (activity instanceof DetailActivity) {
             activity.supportStartPostponedEnterTransition();
 
-            if ( null != toolbarView ) {
+            if (null != toolbarView) {
                 activity.setSupportActionBar(toolbarView);
 
                 activity.getSupportActionBar().setDisplayShowTitleEnabled(false);
                 activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             }
         } else {
-            if ( null != toolbarView ) {
+            if (null != toolbarView) {
                 Menu menu = toolbarView.getMenu();
-                if ( null != menu ) menu.clear();
+                if (null != menu) menu.clear();
                 toolbarView.inflateMenu(R.menu.detailfragment);
                 finishCreatingMenu(toolbarView.getMenu());
             }
@@ -263,5 +267,6 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> loader) { }
+    public void onLoaderReset(Loader<Cursor> loader) {
+    }
 }
