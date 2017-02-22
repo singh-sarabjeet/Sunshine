@@ -10,6 +10,7 @@
     <Space
         app:layout_columnSpan="2"
         app:layout_columnWeight="1"
+        android:layout_height="@dimen/detail_view_padding_vertical"
         app:layout_rowWeight="1" />
 
     <TextView
@@ -70,6 +71,7 @@
     <Space
         app:layout_columnSpan="2"
         app:layout_columnWeight="1"
-        app:layout_rowWeight="1" />
+        app:layout_rowWeight="1"
+        android:layout_height="@dimen/detail_view_padding_vertical"/>
 
 </android.support.v7.widget.GridLayout>
