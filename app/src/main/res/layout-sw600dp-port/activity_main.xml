@@ -39,10 +39,11 @@
         android:id="@+id/weather_detail_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
         android:layout_below="@id/sunshine_logo_imageview"
         android:layout_marginLeft="@dimen/abc_list_item_padding_horizontal_material"
         android:layout_marginRight="@dimen/abc_list_item_padding_horizontal_material"
+        android:choiceMode="singleChoice"
+        app:autoSelectView="true"
         app:cardElevation="@dimen/detail_card_elevation"
         app:cardPreventCornerOverlap="false" />
 

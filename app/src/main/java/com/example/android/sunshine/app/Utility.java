@@ -269,7 +269,7 @@ public class Utility {
 
     @SuppressWarnings("ResourceType")
     static public @SunshineSyncAdapter.LocationStatus
-    int getLoactionStatus(Context c){
+    int getLocationStatus(Context c){
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(c);
         return sp.getInt(c.getString(R.string.pref_location_key_status),SunshineSyncAdapter.LOCATION_STATUS_UNKNOWN);
     }
