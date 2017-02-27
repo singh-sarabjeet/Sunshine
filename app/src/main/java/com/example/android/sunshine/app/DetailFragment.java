@@ -221,21 +221,21 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             // Read humidity from cursor and update view
             float humidity = data.getFloat(COL_WEATHER_HUMIDITY);
             mHumidityView.setText(getActivity().getString(R.string.format_humidity, humidity));
-            mHumidityView.setContentDescription(getString(R.string.a11y_humidity, mHumidityView.getText()));
-            mHumidityLabelView.setContentDescription(mHumidityView.getContentDescription());
+       //     mHumidityView.setContentDescription(getString(R.string.a11y_humidity, mHumidityView.getText()));
+//            mHumidityLabelView.setContentDescription(mHumidityView.getContentDescription());
 
             // Read wind speed and direction from cursor and update view
             float windSpeedStr = data.getFloat(COL_WEATHER_WIND_SPEED);
             float windDirStr = data.getFloat(COL_WEATHER_DEGREES);
             mWindView.setText(Utility.getFormattedWind(getActivity(), windSpeedStr, windDirStr));
-            mWindView.setContentDescription(getString(R.string.a11y_wind, mWindView.getText()));
-            mWindLabelView.setContentDescription(mWindView.getContentDescription());
+            //mWindView.setContentDescription(getString(R.string.a11y_wind, mWindView.getText()));
+            //mWindLabelView.setContentDescription(mWindView.getContentDescription());
 
             // Read pressure from cursor and update view
             float pressure = data.getFloat(COL_WEATHER_PRESSURE);
             mPressureView.setText(getString(R.string.format_pressure, pressure));
-            mPressureView.setContentDescription(getString(R.string.a11y_pressure, mPressureView.getText()));
-            mPressureLabelView.setContentDescription(mPressureView.getContentDescription());
+          //  mPressureView.setContentDescription(getString(R.string.a11y_pressure, mPressureView.getText()));
+            //mPressureLabelView.setContentDescription(mPressureView.getContentDescription());
 
             // We still need this for the share intent
             mForecast = String.format("%s - %s - %s/%s", dateText, description, high, low);
