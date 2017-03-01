@@ -130,7 +130,7 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
                 .crossFade()
                 .into(forecastAdapterViewHolder.mIconView);
 
-
+        ViewCompat.setTransitionName(forecastAdapterViewHolder.mIconView, "iconView" + position);
         // Read date from cursor
         long dateInMillis = mCursor.getLong(ForecastFragment.COL_WEATHER_DATE);
 
