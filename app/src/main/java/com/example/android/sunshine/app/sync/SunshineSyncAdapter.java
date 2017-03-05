@@ -74,9 +74,10 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     private static final int INDEX_SHORT_DESC = 3;
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({LOCATION_STATUS_OK,LOCATION_STATUS_SERVER_DOWN,LOCATION_STATUS_SERVER_INVALID,
-            LOCATION_STATUS_UNKNOWN,LOCATION_STATUS_INVALID})
-    public @interface LocationStatus{}
+    @IntDef({LOCATION_STATUS_OK, LOCATION_STATUS_SERVER_DOWN, LOCATION_STATUS_SERVER_INVALID,
+            LOCATION_STATUS_UNKNOWN, LOCATION_STATUS_INVALID})
+    public @interface LocationStatus {
+    }
 
     public static final int LOCATION_STATUS_OK = 0;
     public static final int LOCATION_STATUS_SERVER_DOWN = 1;
@@ -92,7 +93,10 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(Account account, Bundle extras, String authority,
                               ContentProviderClient provider, SyncResult syncResult) {
         Log.d(LOG_TAG, "Sync Started.");
-        String locationQuery = Utility.getPreferredLocation(getContext());
+        Context context = getContext();
+        String locationQuery = Utility.getPreferredLocation(context);
+        String locationLatitude = String.valueOf(Utility.getLocationLatitude(context));
+        String locationLongitude = String.valueOf(Utility.getLocationLongitude(context));
 
         // These two need to be declared outside the try/catch
         // so that they can be closed in the finally block.
@@ -114,13 +118,28 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                     "http://api.openweathermap.org/data/2.5/forecast/daily?";
             final String QUERY_PARAM = "q";
             final String FORMAT_PARAM = "mode";
+            final String LAT_PARAM = "lat";
+            final String LON_PARAM = "lon";
             final String UNITS_PARAM = "units";
             final String DAYS_PARAM = "cnt";
             final String APPID_PARAM = "APPID";
 
-            Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
-                    .appendQueryParameter(QUERY_PARAM, locationQuery)
-                    .appendQueryParameter(FORMAT_PARAM, format)
+            Uri.Builder uriBuilder = Uri.parse(FORECAST_BASE_URL).buildUpon();
+
+            // Instead of always building the query based off of the location string, we want to
+            // potentially build a query using a lat/lon value. This will be the case when we are
+            // syncing based off of a new location from the Place Picker API. So we need to check
+            // if we have a lat/lon to work with, and use those when we do. Otherwise, the weather
+            // service may not understand the location address provided by the Place Picker API
+            // and the user could end up with no weather! The horror!
+            if (Utility.isLocationLatLonAvailable(context)) {
+                uriBuilder.appendQueryParameter(LAT_PARAM, locationLatitude)
+                        .appendQueryParameter(LON_PARAM, locationLongitude);
+            } else {
+                uriBuilder.appendQueryParameter(QUERY_PARAM, locationQuery);
+            }
+
+            Uri builtUri = uriBuilder.appendQueryParameter(FORMAT_PARAM, format)
                     .appendQueryParameter(UNITS_PARAM, units)
                     .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
                     .appendQueryParameter(APPID_PARAM, BuildConfig.MY_OPEN_WEATHER_MAP_API_KEY)
@@ -151,18 +170,18 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
             }
 
             if (buffer.length() == 0) {
-                setLocationStatus(getContext(),LOCATION_STATUS_SERVER_DOWN);
+                setLocationStatus(getContext(), LOCATION_STATUS_SERVER_DOWN);
                 return;
             }
             forecastJsonStr = buffer.toString();
             getWeatherDataFromJson(forecastJsonStr, locationQuery);
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error ", e);
-            setLocationStatus(getContext(),LOCATION_STATUS_SERVER_DOWN);
+            setLocationStatus(getContext(), LOCATION_STATUS_SERVER_DOWN);
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
-            setLocationStatus(getContext(),LOCATION_STATUS_SERVER_INVALID);
+            setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -226,10 +245,10 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
         try {
             JSONObject forecastJson = new JSONObject(forecastJsonStr);
 
-            if(forecastJson.has(OWM_MESSAGE_CODE)){
-                int errorCode =forecastJson.getInt(OWM_MESSAGE_CODE);
+            if (forecastJson.has(OWM_MESSAGE_CODE)) {
+                int errorCode = forecastJson.getInt(OWM_MESSAGE_CODE);
 
-                switch (errorCode){
+                switch (errorCode) {
                     case HttpURLConnection.HTTP_OK:
                         break;
                     case HttpURLConnection.HTTP_NOT_FOUND:
@@ -340,12 +359,12 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
             }
 
             Log.d(LOG_TAG, "Sunshine Service Complete. " + cVVector.size() + " Inserted");
-            setLocationStatus(getContext(),LOCATION_STATUS_OK);
+            setLocationStatus(getContext(), LOCATION_STATUS_OK);
 
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
-            setLocationStatus(getContext(),LOCATION_STATUS_SERVER_INVALID);
+            setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
         }
     }
 
@@ -379,88 +398,88 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                     double low = cursor.getDouble(INDEX_MIN_TEMP);
                     String desc = cursor.getString(INDEX_SHORT_DESC);
 
-                        int iconId = Utility.getIconResourceForWeatherCondition(weatherId);
-                        Resources resources = context.getResources();
+                    int iconId = Utility.getIconResourceForWeatherCondition(weatherId);
+                    Resources resources = context.getResources();
 
-                        int artResourceId = Utility.getArtResourceForWeatherCondition(weatherId);
-                        String artUrl = Utility.getArtUrlForWeatherCondition(context, weatherId);
+                    int artResourceId = Utility.getArtResourceForWeatherCondition(weatherId);
+                    String artUrl = Utility.getArtUrlForWeatherCondition(context, weatherId);
 
-                        @SuppressLint("InlinedApi")
-                        int largeIconWidth = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
-                                ? resources.getDimensionPixelSize(android.R.dimen.notification_large_icon_width)
-                                : resources.getDimensionPixelSize(R.dimen.notification_large_icon_default);
-                        @SuppressLint("InlinedApi")
-                        int largeIconHeight = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
-                                ? resources.getDimensionPixelSize(android.R.dimen.notification_large_icon_height)
-                                : resources.getDimensionPixelSize(R.dimen.notification_large_icon_default);
+                    @SuppressLint("InlinedApi")
+                    int largeIconWidth = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
+                            ? resources.getDimensionPixelSize(android.R.dimen.notification_large_icon_width)
+                            : resources.getDimensionPixelSize(R.dimen.notification_large_icon_default);
+                    @SuppressLint("InlinedApi")
+                    int largeIconHeight = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB
+                            ? resources.getDimensionPixelSize(android.R.dimen.notification_large_icon_height)
+                            : resources.getDimensionPixelSize(R.dimen.notification_large_icon_default);
 
 
-                        Bitmap largeIcon;
-                        try {
-                            largeIcon = Glide.with(context)
-                                    .load(artUrl)
-                                    .asBitmap()
-                                    .error(artResourceId)
-                                    .fitCenter()
-                                    .into(largeIconWidth, largeIconHeight).get();
-                        } catch (InterruptedException | ExecutionException e) {
-                            Log.e(LOG_TAG, "Error retrieving large icon from " + artUrl, e);
-                            largeIcon = BitmapFactory.decodeResource(resources, artResourceId);
-                        }
-                        String title = context.getString(R.string.app_name);
-
-                        // Define the text of the forecast.
-                        String
-                                contentText = String.format(context.getString(R.string.format_notification),
-                                desc,
-                                Utility.formatTemperature(context, high),
-                                Utility.formatTemperature(context, low));
-
-                        // NotificationCompatBuilder is a very convenient way to build backward-compatible
-                        // notifications.  Just throw in some data.
-                        NotificationCompat.Builder mBuilder =
-                                new NotificationCompat.Builder(getContext())
-                                        .setColor(resources.getColor(R.color.primary_light))
-                                        .setSmallIcon(iconId)
-                                        .setLargeIcon(largeIcon)
-                                        .setContentTitle(title)
-                                        .setContentText(contentText);
-
-                        // Make something interesting happen when the user clicks on the notification.
-                        // In this case, opening the app is sufficient.
-                        Intent
-                                resultIntent = new Intent(context, MainActivity.class);
-
-                        // The stack builder object will contain an artificial back stack for the
-                        // started Activity.
-                        // This ensures that navigating backward from the Activity leads out of
-                        // your application to the Home screen.
-                        TaskStackBuilder
-                                stackBuilder = TaskStackBuilder.create(context);
-                        stackBuilder.addNextIntent(resultIntent);
-                        PendingIntent resultPendingIntent =
-                                stackBuilder.getPendingIntent(
-                                        0,
-                                        PendingIntent.FLAG_UPDATE_CURRENT
-                                );
-                        mBuilder.setContentIntent(resultPendingIntent);
-
-                        NotificationManager mNotificationManager =
-                                (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                        // WEATHER_NOTIFICATION_ID allows you to update the notification later on.
-                        mNotificationManager.notify(WEATHER_NOTIFICATION_ID, mBuilder.build());
-
-                        //refreshing last sync
-                        SharedPreferences.Editor editor = prefs.edit();
-                        editor.putLong(lastNotificationKey, System.currentTimeMillis());
-                        editor.commit();
-
+                    Bitmap largeIcon;
+                    try {
+                        largeIcon = Glide.with(context)
+                                .load(artUrl)
+                                .asBitmap()
+                                .error(artResourceId)
+                                .fitCenter()
+                                .into(largeIconWidth, largeIconHeight).get();
+                    } catch (InterruptedException | ExecutionException e) {
+                        Log.e(LOG_TAG, "Error retrieving large icon from " + artUrl, e);
+                        largeIcon = BitmapFactory.decodeResource(resources, artResourceId);
                     }
-                    cursor.close();
-                }
-            }
+                    String title = context.getString(R.string.app_name);
 
+                    // Define the text of the forecast.
+                    String
+                            contentText = String.format(context.getString(R.string.format_notification),
+                            desc,
+                            Utility.formatTemperature(context, high),
+                            Utility.formatTemperature(context, low));
+
+                    // NotificationCompatBuilder is a very convenient way to build backward-compatible
+                    // notifications.  Just throw in some data.
+                    NotificationCompat.Builder mBuilder =
+                            new NotificationCompat.Builder(getContext())
+                                    .setColor(resources.getColor(R.color.primary_light))
+                                    .setSmallIcon(iconId)
+                                    .setLargeIcon(largeIcon)
+                                    .setContentTitle(title)
+                                    .setContentText(contentText);
+
+                    // Make something interesting happen when the user clicks on the notification.
+                    // In this case, opening the app is sufficient.
+                    Intent
+                            resultIntent = new Intent(context, MainActivity.class);
+
+                    // The stack builder object will contain an artificial back stack for the
+                    // started Activity.
+                    // This ensures that navigating backward from the Activity leads out of
+                    // your application to the Home screen.
+                    TaskStackBuilder
+                            stackBuilder = TaskStackBuilder.create(context);
+                    stackBuilder.addNextIntent(resultIntent);
+                    PendingIntent resultPendingIntent =
+                            stackBuilder.getPendingIntent(
+                                    0,
+                                    PendingIntent.FLAG_UPDATE_CURRENT
+                            );
+                    mBuilder.setContentIntent(resultPendingIntent);
+
+                    NotificationManager mNotificationManager =
+                            (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                    // WEATHER_NOTIFICATION_ID allows you to update the notification later on.
+                    mNotificationManager.notify(WEATHER_NOTIFICATION_ID, mBuilder.build());
+
+                    //refreshing last sync
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putLong(lastNotificationKey, System.currentTimeMillis());
+                    editor.commit();
+
+                }
+                cursor.close();
+            }
         }
+
+    }
 
 
     /**
@@ -547,13 +566,14 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
 
-    static private void setLocationStatus(Context c, @LocationStatus int locationStatus){
+    static private void setLocationStatus(Context c, @LocationStatus int locationStatus) {
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(c);
         SharedPreferences.Editor spe = sp.edit();
-        spe.putInt(c.getString(R.string.pref_location_key_status),locationStatus);
+        spe.putInt(c.getString(R.string.pref_location_key_status), locationStatus);
         spe.commit();
     }
+
     public static void syncImmediately(Context context) {
         Bundle bundle = new Bundle();
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
