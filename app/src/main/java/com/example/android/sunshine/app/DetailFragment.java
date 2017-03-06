@@ -192,7 +192,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
             // Read date from cursor and update views for day of week and date
             long date = data.getLong(COL_WEATHER_DATE);
-            String dateText = Utility.getFriendlyDayString(getActivity(), date);
+            String dateText = Utility.getFriendlyDayString(getActivity(), date, false);
             mDateView.setText(dateText);
 
             // Get description from weather condition ID
